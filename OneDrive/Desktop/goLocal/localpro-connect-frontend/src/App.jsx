@@ -1,53 +1,230 @@
 import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 
-// Main App component for LocalPro Connect
+// --- Firebase Configuration ---
+// IMPORTANT: Replace these with your actual Firebase project credentials
+// You can find these in your Firebase project settings (Project settings -> Your apps -> Firebase SDK snippet -> Config)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY", // <-- REPLACE THIS WITH YOUR ACTUAL API KEY
+  authDomain: "YOUR_AUTH_DOMAIN", // <-- REPLACE THIS WITH YOUR ACTUAL AUTH DOMAIN
+  projectId: "YOUR_PROJECT_ID", // <-- REPLACE THIS WITH YOUR ACTUAL PROJECT ID
+  storageBucket: "YOUR_STORAGE_BUCKET", // <-- REPLACE THIS WITH YOUR ACTUAL STORAGE BUCKET
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- REPLACE THIS WITH YOUR ACTUAL MESSAGING SENDER ID
+  appId: "YOUR_APP_ID" // <-- REPLACE THIS WITH YOUR ACTUAL APP ID
+};
+
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
+// --- AuthForm Component (now defined directly in App.jsx) ---
+// This component handles user login and signup functionality.
+// It takes an 'onLoginSuccess' prop which is a function called after successful authentication.
+const AuthForm = ({ onLoginSuccess }) => {
+  const [isLogin, setIsLogin] = useState(true); // State to toggle between login and signup forms
+  const [email, setEmail] = useState('');       // State for email input
+  const [password, setPassword] = useState(''); // State for password input
+  const [error, setError] = useState('');       // State for displaying authentication errors
+
+  // Handles the form submission for both login and signup
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent default form submission behavior
+    setError('');       // Clear any previous error messages
+
+    try {
+      if (isLogin) {
+        // Attempt to sign in with email and password
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        // Attempt to create a new user with email and password
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+      onLoginSuccess(); // Call the success callback function passed from the parent (App component)
+    } catch (err) {
+      // Catch and display any errors during authentication
+      setError(err.message); // Display Firebase error message to the user
+      console.error("Authentication error:", err.code, err.message); // Log full error for debugging
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto z-60 relative">
+      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+        {isLogin ? 'Login' : 'Sign Up'}
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            Email:
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+            Password:
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        {error && <p className="text-red-500 text-sm italic">{error}</p>}
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition-colors duration-200"
+        >
+          {isLogin ? 'Login' : 'Sign Up'}
+        </button>
+      </form>
+      <button
+        onClick={() => setIsLogin(!isLogin)}
+        className="mt-4 text-blue-600 hover:text-blue-800 text-sm w-full text-center transition-colors duration-200"
+      >
+        {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
+      </button>
+    </div>
+  );
+};
+
+// --- Main App Component ---
 function App() {
-  // State to store the fetched services
-  const [services, setServices] = useState([]);
-  // State to manage loading status
-  const [loading, setLoading] = useState(true);
-  // State to store any error messages
-  const [error, setError] = useState(null);
+  // State to store the list of services displayed in the "Popular Services" section.
+  // Currently populated with dummy data for immediate display.
+  const [services, setServices] = useState([
+    { id: 1, name: "Salon at Home", image: "https://placehold.co/150x150/0000FF/FFFFFF?text=Salon" },
+    { id: 2, name: "AC Repair", image: "https://placehold.co/150x150/FF0000/FFFFFF?text=AC" },
+    { id: 3, name: "Plumbing", image: "https://placehold.co/150x150/008000/FFFFFF?text=Plumbing" },
+    { id: 4, name: "Electrician", image: "https://placehold.co/150x150/FFFF00/000000?text=Electrician" },
+    { id: 5, name: "Carpentry", image: "https://placehold.co/150x150/FFA500/FFFFFF?text=Carpentry" },
+    { id: 6, name: "Cleaning", image: "https://placehold.co/150x150/800080/FFFFFF?text=Cleaning" },
+    { id: 7, name: "Pest Control", image: "https://placehold.co/150x150/00FFFF/000000?text=Pest" },
+    { id: 8, name: "Appliance Repair", image: "https://placehold.co/150x150/FFC0CB/000000?text=Appliance" },
+  ]);
 
-  // useEffect hook to fetch data when the component mounts
+  // State to manage the loading status of services. Set to false as we're using dummy data.
+  const [loading, setLoading] = useState(false);
+  // State to store any error messages related to fetching services. Set to null.
+  const [error, setError] = useState(null);
+  // State to control the visibility of the authentication modal.
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  // State to store the current authenticated user object from Firebase.
+  const [user, setUser] = useState(null);
+  // State to track if Firebase Auth has completed its initial check.
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  // useEffect hook to listen for changes in Firebase authentication state.
+  // This runs once on component mount and sets up a listener that updates
+  // the 'user' state whenever the user logs in or out.
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser); // Update the user state with the current user (or null if logged out)
+      setIsAuthReady(true); // Mark authentication as ready after the initial check
+      console.log('Auth state changed:', currentUser ? currentUser.email : 'No user');
+    });
+
+    // Cleanup function: unsubscribe from the auth state listener when the component unmounts
+    return () => unsubscribe();
+  }, []); // Empty dependency array ensures this effect runs only once on mount
+
+  // Function to handle user logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out the current user from Firebase
+      console.log('User logged out successfully');
+      setShowAuthModal(false); // Close the authentication modal if it's open after logout
+    } catch (error) {
+      console.error('Error logging out:', error); // Log any errors during logout
+    }
+  };
+
+  // Optional: If you decide to fetch services from a backend later,
+  // uncomment and modify this useEffect block. Remember to replace
+  // 'YOUR_BACKEND_SERVICES_API_URL' with your actual API endpoint.
+  /*
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // Make a GET request to the backend API for services
-        const response = await fetch('http://localhost:5000/api/services');
-        // Check if the response was successful (status code 200-299)
+        setLoading(true); // Set loading to true before fetching
+        setError(null);    // Clear any previous errors
+        const response = await fetch('YOUR_BACKEND_SERVICES_API_URL'); // e.g., 'http://localhost:5000/api/services'
         if (!response.ok) {
-          // If not successful, throw an error
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // Parse the JSON response
         const data = await response.json();
-        // Update the services state with the fetched data
-        setServices(data);
+        setServices(data); // Update services state with fetched data
       } catch (err) {
-        // Catch any errors during the fetch operation and update the error state
         console.error("Failed to fetch services:", err);
         setError("Failed to load services. Please try again later.");
       } finally {
-        // Set loading to false once the fetch operation is complete (success or failure)
-        setLoading(false);
+        setLoading(false); // Set loading to false after fetching (whether success or error)
       }
     };
 
-    fetchServices(); // Call the fetchServices function
-  }, []); // Empty dependency array means this effect runs only once after the initial render
+    fetchServices(); // Call the fetch function
+  }, []); // Empty dependency array means this runs once on component mount
+  */
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+      {/* Auth Modal Overlay: Conditionally rendered when showAuthModal is true */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="relative">
+            {/* AuthForm component is rendered inside the modal */}
+            {/* onLoginSuccess prop is passed to close the modal upon successful login/signup */}
+            <AuthForm onLoginSuccess={() => setShowAuthModal(false)} />
+            <button
+              onClick={() => setShowAuthModal(false)} // Button to close the modal
+              className="absolute top-4 right-4 text-white text-3xl font-bold p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+              aria-label="Close"
+            >
+              &times; {/* HTML entity for a multiplication sign, commonly used as a close icon */}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Bar - Responsive and Urban Company inspired */}
       <nav className="bg-white shadow-sm py-3 px-4 md:px-8 flex flex-col sm:flex-row justify-between items-center sticky top-0 z-50">
         <div className="text-2xl md:text-3xl font-extrabold text-blue-600 mb-2 sm:mb-0">LocalPro Connect</div>
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Services</a>
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Become a Pro</a>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
-            Login/Signup
-          </button>
+
+          {/* Conditional rendering for Login/Signup button or User Email/Logout button */}
+          {/* Renders only after Firebase Auth has initialized (isAuthReady is true) */}
+          {isAuthReady && (
+            user ? ( // If a user is logged in
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-700 font-medium text-base md:text-lg">{user.email}</span>
+                <button
+                  onClick={handleLogout} // Calls handleLogout function on click
+                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 text-base"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : ( // If no user is logged in
+              <button
+                onClick={() => setShowAuthModal(true)} // Opens the AuthForm modal
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+              >
+                Login/Signup
+              </button>
+            )
+          )}
         </div>
       </nav>
 
@@ -122,31 +299,11 @@ function App() {
           <p className="text-xl text-red-600 text-center">{error}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="bg-white p-4 md:p-6 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 flex flex-col items-center text-center cursor-pointer"
-              >
-                {/* Service Icon with a cleaner background */}
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 md:mb-5 text-3xl md:text-4xl shadow-inner">
-                  {/* Using emojis for now, can be replaced with Lucide React or Font Awesome */}
-                  {service.name === 'Plumbing' && '💧'}
-                  {service.name === 'Electrical' && '⚡'}
-                  {service.name === 'Carpentry' && '🔨'}
-                  {service.name === 'Beauty & Salon' && '💅'}
-                  {service.name === 'Cleaning' && '🧹'}
-                  {service.name === 'Tech Support' && '💻'}
-                  {service.name === 'Vehicle Care' && '🚗'}
-                  {service.name === 'Driver' && '👨‍✈️'}
-                  {!['Plumbing', 'Electrical', 'Carpentry', 'Beauty & Salon', 'Cleaning', 'Tech Support', 'Vehicle Care', 'Driver'].includes(service.name) && '🛠️'}
-                </div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-xs md:text-sm text-gray-600 flex-grow mb-3 md:mb-4">{service.description}</p>
-                <button className="mt-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
-                  Book Now
-                </button>
+            {/* Maps through the 'services' array to render each service card */}
+            {services.map(service => (
+              <div key={service.id} className="bg-gray-50 p-4 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 text-center cursor-pointer transform hover:scale-105">
+                <img src={service.image} alt={service.name} className="w-24 h-24 mx-auto mb-3 rounded-full object-cover border-2 border-blue-300" />
+                <h3 className="text-lg font-semibold text-gray-800">{service.name}</h3>
               </div>
             ))}
           </div>
