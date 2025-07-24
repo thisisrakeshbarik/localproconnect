@@ -197,7 +197,7 @@ function App() {
                       {service.name === 'Plumbing' && '💧'}
                       {service.name === 'Electrical' && '⚡'}
                       {service.name === 'Carpentry' && '🔨'}
-                      {service.name === 'Beauty & Salon' && '💅'}
+                      {service.name === 'Beauty & Salon' && '�'}
                       {service.name === 'Cleaning' && '🧹'}
                       {service.name === 'Tech Support' && '💻'}
                       {service.name === 'Vehicle Care' && '🚗'}
@@ -269,4 +269,4 @@ function App() {
       );
     }
 
-    export default A
+    export default A;
