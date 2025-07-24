@@ -186,33 +186,8 @@ function App() {
               <p className="text-xl text-red-600 text-center">{error}</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
-                {services.map((service) => (
-                  <div
-                    key={service.id}
-                    className="bg-white p-4 md:p-6 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 flex flex-col items-center text-center cursor-pointer"
-                  >
-                    {/* Service Icon with a cleaner background */}
-                    <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 md:mb-5 text-3xl md:text-4xl shadow-inner">
-                      {/* Using emojis for now, can be replaced with Lucide React or Font Awesome */}
-                      {service.name === 'Plumbing' && '💧'}
-                      {service.name === 'Electrical' && '⚡'}
-                      {service.name === 'Carpentry' && '🔨'}
-                      {service.name === 'Beauty & Salon' && '�'}
-                      {service.name === 'Cleaning' && '🧹'}
-                      {service.name === 'Tech Support' && '💻'}
-                      {service.name === 'Vehicle Care' && '🚗'}
-                      {service.name === 'Driver' && '👨‍✈️'}
-                      {!['Plumbing', 'Electrical', 'Carpentry', 'Beauty & Salon', 'Cleaning', 'Tech Support', 'Vehicle Care', 'Driver'].includes(service.name) && '🛠️'}
-                    </div>
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
-                      {service.name}
-                    </h3>
-                    <p className="text-xs md:text-sm text-gray-600 flex-grow mb-3 md:mb-4">{service.description}</p>
-                    <button className="mt-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
-                      Book Now
-                    </button>
-                  </div>
-                ))}
+                {/* Services will be empty array, so this section will not render any service cards */}
+                {/* You can add dummy data to the services state if you want to see cards without a backend */}
               </div>
             )}
           </section>
