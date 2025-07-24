@@ -8,14 +8,14 @@ const auth = getAuth(firebaseApp);
 
 // Main App component for LocalPro Connect
 function App() {
-  // State to store the fetched services
-  const [services, setServices] = useState([]);
-  // State to manage loading status for services
-  const [loading, setLoading] = useState(true);
-  // State to store any error messages for services
+  // State to store the fetched services (no longer fetched from localhost)
+  const [services, setServices] = useState([]); // Services will be an empty array for now
+  // State to manage loading status for services (set to false as we're not fetching from backend)
+  const [loading, setLoading] = useState(false);
+  // State to store any error messages for services (set to null as we're not fetching from backend)
   const [error, setError] = useState(null);
   // State to control visibility of the AuthForm modal
-  const [showAuthModal, setShowAuthModal] = useState(false); // <--- THIS IS CRUCIAL
+  const [showAuthModal, setShowAuthModal] = useState(false);
   // State to store the current authenticated user
   const [user, setUser] = useState(null);
   // State to track if Firebase Auth is ready (initial check complete)
@@ -33,34 +33,17 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Effect to fetch services when the component mounts
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/services');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setServices(data);
-      } catch (err) {
-        console.error("Failed to fetch services:", err);
-        setError("Failed to load services. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServices();
-  }, []);
+  // Removed useEffect for fetching services from localhost:5000
+  // For now, services will be an empty array, or you can add dummy data.
+  // If you deploy your backend later, you'll re-add a similar useEffect
+  // pointing to your live backend URL.
 
   // Function to handle logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
       console.log('User logged out');
-      // Optionally, close the modal or redirect
-      setShowAuthModal(false);
+      setShowAuthModal(false); // Close modal if open after logout
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -69,7 +52,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       {/* Auth Modal Overlay */}
-      {showAuthModal && ( // <--- THIS IS CRUCIAL FOR RENDERING THE MODAL
+      {showAuthModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="relative">
             <AuthForm />
@@ -92,7 +75,7 @@ function App() {
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Become a Pro</a>
           
           {/* Conditional rendering for Login/Signup or User Email/Logout */}
-          {isAuthReady && ( // Only render auth buttons after Firebase auth state is checked
+          {isAuthReady && (
             user ? (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-700 font-medium text-base md:text-lg">{user.email}</span>
