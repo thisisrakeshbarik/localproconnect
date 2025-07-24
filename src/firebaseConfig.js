@@ -1,7 +1,7 @@
 // Import the functions you need from the Firebase SDKs
 import { initializeApp } from "firebase/app";
 // You might not need getAnalytics if you disabled it, but it's fine to keep for now.
-// import { getAnalytics } from "firebase/analytics";
+// import { getAanalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 // IMPORTANT: Replace these with your actual Firebase config from the Firebase Console
