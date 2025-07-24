@@ -8,8 +8,17 @@ const auth = getAuth(firebaseApp);
 
 // Main App component for LocalPro Connect
 function App() {
-  // State to store the fetched services (no longer fetched from localhost)
-  const [services, setServices] = useState([]); // Services will be an empty array for now
+  // State to store the fetched services (now with dummy data for display)
+  const [services, setServices] = useState([
+    { id: 1, name: "Salon at Home", image: "https://via.placeholder.com/150/0000FF/FFFFFF?text=Salon" },
+    { id: 2, name: "AC Repair", image: "https://via.placeholder.com/150/FF0000/FFFFFF?text=AC" },
+    { id: 3, name: "Plumbing", image: "https://via.placeholder.com/150/008000/FFFFFF?text=Plumbing" },
+    { id: 4, name: "Electrician", image: "https://via.placeholder.com/150/FFFF00/000000?text=Electrician" },
+    { id: 5, name: "Carpentry", image: "https://via.placeholder.com/150/FFA500/FFFFFF?text=Carpentry" },
+    { id: 6, name: "Cleaning", image: "https://via.placeholder.com/150/800080/FFFFFF?text=Cleaning" },
+    { id: 7, name: "Pest Control", image: "https://via.placeholder.com/150/00FFFF/000000?text=Pest" },
+    { id: 8, name: "Appliance Repair", image: "https://via.placeholder.com/150/FFC0CB/000000?text=Appliance" },
+  ]);
   // State to manage loading status for services (set to false as we're not fetching from backend)
   const [loading, setLoading] = useState(false);
   // State to store any error messages for services (set to null as we're not fetching from backend)
@@ -73,7 +82,7 @@ function App() {
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Services</a>
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Become a Pro</a>
-          
+
           {/* Conditional rendering for Login/Signup or User Email/Logout */}
           {isAuthReady && (
             user ? (
@@ -143,88 +152,92 @@ function App() {
           </div>
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
-                  <span className="font-bold">2</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Get Matched</h3>
-                <p className="text-sm md:text-base text-gray-600">We connect you with verified and top-rated professionals nearby.</p>
-              </div>
-              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
-                  <span className="font-bold">3</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Service at Home</h3>
-                <p className="text-sm md:text-base text-gray-600">Professionals arrive at your doorstep to deliver quality service.</p>
-              </div>
+              <span className="font-bold">2</span>
             </div>
-          </section>
-
-          {/* Services Section - Responsive and visually appealing cards */}
-          <section className="container mx-auto py-12 md:py-16 px-4 bg-white rounded-xl shadow-lg mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8 md:mb-12">Popular Services</h2>
-
-            {/* Conditional rendering based on loading, error, or data */}
-            {loading ? (
-              <p className="text-xl text-gray-600 text-center">Loading services...</p>
-            ) : error ? (
-              <p className="text-xl text-red-600 text-center">{error}</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
-                {/* Services will be empty array, so this section will not render any service cards */}
-                {/* You can add dummy data to the services state if you want to see cards without a backend */}
-              </div>
-            )}
-          </section>
-
-          {/* Call to Action Section - Responsive and inviting */}
-          <section className="bg-blue-600 text-white py-12 md:py-16 px-4 text-center rounded-xl mx-auto max-w-6xl shadow-xl my-12 md:my-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">Ready to Experience Convenience?</h2>
-            <p className="text-lg md:text-xl mb-6 md:mb-8 opacity-95">
-              Join LocalPro Connect as a customer or become a verified professional today!
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <button className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white text-base">
-                Get Started as Customer
-              </button>
-              <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
-                Become a Professional
-              </button>
+            <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Get Matched</h3>
+            <p className="text-sm md:text-base text-gray-600">We connect you with verified and top-rated professionals nearby.</p>
+          </div>
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
+              <span className="font-bold">3</span>
             </div>
-          </section>
-
-          {/* Footer - Responsive and more detailed */}
-          <footer className="bg-gray-900 text-gray-300 py-8 md:py-10 px-4 text-center">
-            <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              <div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">LocalPro Connect</h3>
-                <p className="text-sm">Your trusted partner for on-demand services.</p>
-              </div>
-              <div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Quick Links</h3>
-                <ul className="space-y-1 md:space-y-2 text-sm">
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">About Us</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">Careers</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">Blog</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Support</h3>
-                <ul className="space-y-1 md:space-y-2 text-sm">
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">Help Center</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">FAQs</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
-                </ul>
-              </div>
-            </div>
-            <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-700 text-xs md:text-sm">
-              <p>&copy; {new Date().getFullYear()} LocalPro Connect. All rights reserved.</p>
-              <div className="flex justify-center space-x-4 md:space-x-6 mt-3 md:mt-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a>
-              </div>
-            </div>
-          </footer>
+            <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Service at Home</h3>
+            <p className="text-sm md:text-base text-gray-600">Professionals arrive at your doorstep to deliver quality service.</p>
+          </div>
         </div>
-      );
-    }
+      </section>
 
-    export default App;
+      {/* Services Section - Responsive and visually appealing cards */}
+      <section className="container mx-auto py-12 md:py-16 px-4 bg-white rounded-xl shadow-lg mb-12 md:mb-16">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8 md:mb-12">Popular Services</h2>
+
+        {/* Conditional rendering based on loading, error, or data */}
+        {loading ? (
+          <p className="text-xl text-gray-600 text-center">Loading services...</p>
+        ) : error ? (
+          <p className="text-xl text-red-600 text-center">{error}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+            {services.map(service => (
+              <div key={service.id} className="bg-gray-50 p-4 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 text-center cursor-pointer transform hover:scale-105">
+                <img src={service.image} alt={service.name} className="w-24 h-24 mx-auto mb-3 rounded-full object-cover border-2 border-blue-300" />
+                <h3 className="text-lg font-semibold text-gray-800">{service.name}</h3>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Call to Action Section - Responsive and inviting */}
+      <section className="bg-blue-600 text-white py-12 md:py-16 px-4 text-center rounded-xl mx-auto max-w-6xl shadow-xl my-12 md:my-16">
+        <h2 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">Ready to Experience Convenience?</h2>
+        <p className="text-lg md:text-xl mb-6 md:mb-8 opacity-95">
+          Join LocalPro Connect as a customer or become a verified professional today!
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+          <button className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white text-base">
+            Get Started as Customer
+          </button>
+          <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+            Become a Professional
+          </button>
+        </div>
+      </section>
+
+      {/* Footer - Responsive and more detailed */}
+      <footer className="bg-gray-900 text-gray-300 py-8 md:py-10 px-4 text-center">
+        <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">LocalPro Connect</h3>
+            <p className="text-sm">Your trusted partner for on-demand services.</p>
+          </div>
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Quick Links</h3>
+            <ul className="space-y-1 md:space-y-2 text-sm">
+              <li><a href="#" className="hover:text-white transition-colors duration-200">About Us</a></li>
+              <li><a href="#" className="hover:text-white transition-colors duration-200">Careers</a></li>
+              <li><a href="#" className="hover:text-white transition-colors duration-200">Blog</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Support</h3>
+            <ul className="space-y-1 md:space-y-2 text-sm">
+              <li><a href="#" className="hover:text-white transition-colors duration-200">Help Center</a></li>
+              <li><a href="#" className="hover:text-white transition-colors duration-200">FAQs</a></li>
+              <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-700 text-xs md:text-sm">
+          <p>&copy; {new Date().getFullYear()} LocalPro Connect. All rights reserved.</p>
+          <div className="flex justify-center space-x-4 md:space-x-6 mt-3 md:mt-4">
+            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>
+            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
