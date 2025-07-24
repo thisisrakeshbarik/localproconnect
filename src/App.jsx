@@ -1,53 +1,117 @@
 import React, { useState, useEffect } from 'react';
+import AuthForm from './components/AuthForm'; // Import the new AuthForm component
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'; // Import Firebase Auth functions
+import firebaseApp from './firebaseConfig'; // Import the initialized Firebase app
+
+// Get the Auth instance
+const auth = getAuth(firebaseApp);
 
 // Main App component for LocalPro Connect
 function App() {
   // State to store the fetched services
   const [services, setServices] = useState([]);
-  // State to manage loading status
+  // State to manage loading status for services
   const [loading, setLoading] = useState(true);
-  // State to store any error messages
+  // State to store any error messages for services
   const [error, setError] = useState(null);
+  // State to control visibility of the AuthForm modal
+  const [showAuthModal, setShowAuthModal] = useState(false); // <--- THIS IS CRUCIAL
+  // State to store the current authenticated user
+  const [user, setUser] = useState(null);
+  // State to track if Firebase Auth is ready (initial check complete)
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-  // useEffect hook to fetch data when the component mounts
+  // Effect to listen for Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser); // Update user state
+      setIsAuthReady(true); // Mark auth as ready
+      console.log('Auth state changed:', currentUser ? currentUser.email : 'No user');
+    });
+
+    // Cleanup subscription on component unmount
+    return () => unsubscribe();
+  }, []);
+
+  // Effect to fetch services when the component mounts
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // Make a GET request to the backend API for services
         const response = await fetch('http://localhost:5000/api/services');
-        // Check if the response was successful (status code 200-299)
         if (!response.ok) {
-          // If not successful, throw an error
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // Parse the JSON response
         const data = await response.json();
-        // Update the services state with the fetched data
         setServices(data);
       } catch (err) {
-        // Catch any errors during the fetch operation and update the error state
         console.error("Failed to fetch services:", err);
         setError("Failed to load services. Please try again later.");
       } finally {
-        // Set loading to false once the fetch operation is complete (success or failure)
         setLoading(false);
       }
     };
 
-    fetchServices(); // Call the fetchServices function
-  }, []); // Empty dependency array means this effect runs only once after the initial render
+    fetchServices();
+  }, []);
+
+  // Function to handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log('User logged out');
+      // Optionally, close the modal or redirect
+      setShowAuthModal(false);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+      {/* Auth Modal Overlay */}
+      {showAuthModal && ( // <--- THIS IS CRUCIAL FOR RENDERING THE MODAL
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="relative">
+            <AuthForm />
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-white text-3xl font-bold p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Bar - Responsive and Urban Company inspired */}
       <nav className="bg-white shadow-sm py-3 px-4 md:px-8 flex flex-col sm:flex-row justify-between items-center sticky top-0 z-50">
         <div className="text-2xl md:text-3xl font-extrabold text-blue-600 mb-2 sm:mb-0">LocalPro Connect</div>
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Services</a>
           <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 text-base md:text-lg">Become a Pro</a>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
-            Login/Signup
-          </button>
+          
+          {/* Conditional rendering for Login/Signup or User Email/Logout */}
+          {isAuthReady && ( // Only render auth buttons after Firebase auth state is checked
+            user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-700 font-medium text-base md:text-lg">{user.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 text-base"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+              >
+                Login/Signup
+              </button>
+            )
+          )}
         </div>
       </nav>
 
@@ -96,113 +160,113 @@ function App() {
           </div>
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
-              <span className="font-bold">2</span>
-            </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Get Matched</h3>
-            <p className="text-sm md:text-base text-gray-600">We connect you with verified and top-rated professionals nearby.</p>
-          </div>
-          <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
-              <span className="font-bold">3</span>
-            </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Service at Home</h3>
-            <p className="text-sm md:text-base text-gray-600">Professionals arrive at your doorstep to deliver quality service.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section - Responsive and visually appealing cards */}
-      <section className="container mx-auto py-12 md:py-16 px-4 bg-white rounded-xl shadow-lg mb-12 md:mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8 md:mb-12">Popular Services</h2>
-
-        {/* Conditional rendering based on loading, error, or data */}
-        {loading ? (
-          <p className="text-xl text-gray-600 text-center">Loading services...</p>
-        ) : error ? (
-          <p className="text-xl text-red-600 text-center">{error}</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="bg-white p-4 md:p-6 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 flex flex-col items-center text-center cursor-pointer"
-              >
-                {/* Service Icon with a cleaner background */}
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 md:mb-5 text-3xl md:text-4xl shadow-inner">
-                  {/* Using emojis for now, can be replaced with Lucide React or Font Awesome */}
-                  {service.name === 'Plumbing' && '💧'}
-                  {service.name === 'Electrical' && '⚡'}
-                  {service.name === 'Carpentry' && '🔨'}
-                  {service.name === 'Beauty & Salon' && '💅'}
-                  {service.name === 'Cleaning' && '🧹'}
-                  {service.name === 'Tech Support' && '💻'}
-                  {service.name === 'Vehicle Care' && '🚗'}
-                  {service.name === 'Driver' && '👨‍✈️'}
-                  {!['Plumbing', 'Electrical', 'Carpentry', 'Beauty & Salon', 'Cleaning', 'Tech Support', 'Vehicle Care', 'Driver'].includes(service.name) && '🛠️'}
+                  <span className="font-bold">2</span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-xs md:text-sm text-gray-600 flex-grow mb-3 md:mb-4">{service.description}</p>
-                <button className="mt-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
-                  Book Now
-                </button>
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Get Matched</h3>
+                <p className="text-sm md:text-base text-gray-600">We connect you with verified and top-rated professionals nearby.</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+              <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-blue-50 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 md:mb-6 text-3xl md:text-4xl shadow-md">
+                  <span className="font-bold">3</span>
+                </div>
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-3">Service at Home</h3>
+                <p className="text-sm md:text-base text-gray-600">Professionals arrive at your doorstep to deliver quality service.</p>
+              </div>
+            </div>
+          </section>
 
-      {/* Call to Action Section - Responsive and inviting */}
-      <section className="bg-blue-600 text-white py-12 md:py-16 px-4 text-center rounded-xl mx-auto max-w-6xl shadow-xl my-12 md:my-16">
-        <h2 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">Ready to Experience Convenience?</h2>
-        <p className="text-lg md:text-xl mb-6 md:mb-8 opacity-95">
-          Join LocalPro Connect as a customer or become a verified professional today!
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-          <button className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white text-base">
-            Get Started as Customer
-          </button>
-          <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
-            Become a Professional
-          </button>
-        </div>
-      </section>
+          {/* Services Section - Responsive and visually appealing cards */}
+          <section className="container mx-auto py-12 md:py-16 px-4 bg-white rounded-xl shadow-lg mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8 md:mb-12">Popular Services</h2>
 
-      {/* Footer - Responsive and more detailed */}
-      <footer className="bg-gray-900 text-gray-300 py-8 md:py-10 px-4 text-center">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          <div>
-            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">LocalPro Connect</h3>
-            <p className="text-sm">Your trusted partner for on-demand services.</p>
-          </div>
-          <div>
-            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Quick Links</h3>
-            <ul className="space-y-1 md:space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors duration-200">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors duration-200">Careers</a></li>
-              <li><a href="#" className="hover:text-white transition-colors duration-200">Blog</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Support</h3>
-            <ul className="space-y-1 md:space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors duration-200">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition-colors duration-200">FAQs</a></li>
-              <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-700 text-xs md:text-sm">
-          <p>&copy; {new Date().getFullYear()} LocalPro Connect. All rights reserved.</p>
-          <div className="flex justify-center space-x-4 md:space-x-6 mt-3 md:mt-4">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+            {/* Conditional rendering based on loading, error, or data */}
+            {loading ? (
+              <p className="text-xl text-gray-600 text-center">Loading services...</p>
+            ) : error ? (
+              <p className="text-xl text-red-600 text-center">{error}</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    className="bg-white p-4 md:p-6 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100 flex flex-col items-center text-center cursor-pointer"
+                  >
+                    {/* Service Icon with a cleaner background */}
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 md:mb-5 text-3xl md:text-4xl shadow-inner">
+                      {/* Using emojis for now, can be replaced with Lucide React or Font Awesome */}
+                      {service.name === 'Plumbing' && '💧'}
+                      {service.name === 'Electrical' && '⚡'}
+                      {service.name === 'Carpentry' && '🔨'}
+                      {service.name === 'Beauty & Salon' && '💅'}
+                      {service.name === 'Cleaning' && '🧹'}
+                      {service.name === 'Tech Support' && '💻'}
+                      {service.name === 'Vehicle Care' && '🚗'}
+                      {service.name === 'Driver' && '👨‍✈️'}
+                      {!['Plumbing', 'Electrical', 'Carpentry', 'Beauty & Salon', 'Cleaning', 'Tech Support', 'Vehicle Care', 'Driver'].includes(service.name) && '🛠️'}
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
+                      {service.name}
+                    </h3>
+                    <p className="text-xs md:text-sm text-gray-600 flex-grow mb-3 md:mb-4">{service.description}</p>
+                    <button className="mt-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-lg shadow-md transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                      Book Now
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-export default App;
+          {/* Call to Action Section - Responsive and inviting */}
+          <section className="bg-blue-600 text-white py-12 md:py-16 px-4 text-center rounded-xl mx-auto max-w-6xl shadow-xl my-12 md:my-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">Ready to Experience Convenience?</h2>
+            <p className="text-lg md:text-xl mb-6 md:mb-8 opacity-95">
+              Join LocalPro Connect as a customer or become a verified professional today!
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <button className="bg-white text-blue-700 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white text-base">
+                Get Started as Customer
+              </button>
+              <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                Become a Professional
+              </button>
+            </div>
+          </section>
+
+          {/* Footer - Responsive and more detailed */}
+          <footer className="bg-gray-900 text-gray-300 py-8 md:py-10 px-4 text-center">
+            <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">LocalPro Connect</h3>
+                <p className="text-sm">Your trusted partner for on-demand services.</p>
+              </div>
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Quick Links</h3>
+                <ul className="space-y-1 md:space-y-2 text-sm">
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">About Us</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">Careers</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">Blog</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Support</h3>
+                <ul className="space-y-1 md:space-y-2 text-sm">
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">Help Center</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">FAQs</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-700 text-xs md:text-sm">
+              <p>&copy; {new Date().getFullYear()} LocalPro Connect. All rights reserved.</p>
+              <div className="flex justify-center space-x-4 md:space-x-6 mt-3 md:mt-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    export default A
